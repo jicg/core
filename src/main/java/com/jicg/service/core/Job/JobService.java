@@ -1,33 +1,32 @@
 package com.jicg.service.core.Job;
 
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jicg.service.core.Job.bean.JobInfo;
 import com.jicg.service.core.Utils;
 import com.jicg.service.core.config.AppConfig;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.spi.JobStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.jicg.service.core.Job.JobApplicationRunner.*;
 
 @Slf4j
 @Service
-
+@Data
 public class JobService {
     private final AppConfig appConfig;
-
-
     private final Scheduler scheduler;
+    private  List<JobInfo> stoped = new ArrayList<>();
 
     @Autowired
     public JobService(Scheduler scheduler, AppConfig appConfig) {
@@ -65,13 +64,8 @@ public class JobService {
                 .withSchedule(cron).build();
 
 
-        if (StrUtil.isNotEmpty(jobInfo.getStatus())
-                && Trigger.TriggerState.PAUSED == Trigger.TriggerState.valueOf(jobInfo.getStatus())) {
-            scheduler.scheduleJob(jobDetail, trigger);
-            scheduler.interrupt(trigger.getJobKey());
-            scheduler.pauseJob(trigger.getJobKey());
-
-        } else {
+        if (StrUtil.isEmpty(jobInfo.getStatus())
+                || Trigger.TriggerState.PAUSED != Trigger.TriggerState.valueOf(jobInfo.getStatus())) {
             scheduler.scheduleJob(jobDetail, trigger);
             scheduler.resumeJob(trigger.getJobKey());
         }
@@ -99,9 +93,20 @@ public class JobService {
         scheduler.triggerJob(JobKey.jobKey(jobName, jobGroup));
     }
 
-    public void resumeJob(String jobName, String jobGroup) throws SchedulerException {
-        log.info(jobName + "  " + jobGroup);
-        scheduler.resumeJob(JobKey.jobKey(jobName, jobGroup));
+    public void resumeJob(String jobName, String jobGroup) throws Exception {
+        JobKey jobKey = JobKey.jobKey(jobName, jobGroup);
+        if (!scheduler.checkExists(jobKey)) {
+            Optional<JobInfo> info = stoped.stream().filter(jobInfo -> StrUtil.equalsIgnoreCase(jobInfo.getJobName(), jobName) &&
+                    StrUtil.equalsIgnoreCase(jobInfo.getGroupName(), jobGroup))
+                    .findFirst();
+            if (info.isPresent()) {
+                info.get().setStatus(Trigger.TriggerState.NORMAL.name());
+                addJob(info.get());
+            }
+        } else {
+            scheduler.resumeJob(JobKey.jobKey(jobName, jobGroup));
+        }
+
         saveToFile();
     }
 
@@ -145,9 +150,15 @@ public class JobService {
             }
 
         }
-        jobInfos.sort(Comparator.comparing(JobInfo::getOrder));
-        return jobInfos;
+        List<JobInfo> all = CollectionUtil.unionAll(jobInfos,
+                stoped.stream().filter(jobInfo -> !jobInfos.contains(jobInfo)).collect(Collectors.toList())
+        );
+        all.sort(Comparator.comparing(JobInfo::getOrder));
+        return all;
     }
 
 
+    public void init() throws Exception {
+        addJobs(stoped);
+    }
 }

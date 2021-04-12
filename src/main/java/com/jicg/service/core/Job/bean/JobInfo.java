@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author jicg on 2021/3/20
@@ -47,6 +48,20 @@ public class JobInfo {
 
     private String status;
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JobInfo)) return false;
+        JobInfo jobInfo = (JobInfo) o;
+        return getJobName().equals(jobInfo.getJobName()) &&
+                getGroupName().equals(jobInfo.getGroupName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getJobName(), getGroupName());
+    }
 
     public static JobInfo.JobInfoBuilder builder() {
         return new JobInfo.JobInfoBuilder();

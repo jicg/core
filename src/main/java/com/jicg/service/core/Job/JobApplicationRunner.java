@@ -1,12 +1,12 @@
-package  com.jicg.service.core.Job;
+package com.jicg.service.core.Job;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.json.JSONUtil;
-import  com.jicg.service.core.Job.bean.BaseJobAction;
-import  com.jicg.service.core.Job.bean.JobInfo;
-import  com.jicg.service.core.Utils;
-import  com.jicg.service.core.annos.JobDisable;
-import  com.jicg.service.core.annos.JobJava;
+import com.jicg.service.core.Job.bean.BaseJobAction;
+import com.jicg.service.core.Job.bean.JobInfo;
+import com.jicg.service.core.Utils;
+import com.jicg.service.core.annos.JobDisable;
+import com.jicg.service.core.annos.JobJava;
 import com.jicg.service.core.config.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -85,7 +85,8 @@ public class JobApplicationRunner implements ApplicationRunner {
             List<JobInfo> finalJobInfos = jobInfos;
             appConfig.getJob().getPackages().forEach(pag -> finalJobInfos.addAll(getScanBean(pag)));
         }
-        jobService.addJobs(jobInfos);
+        jobService.setStoped(jobInfos);
+        jobService.init();
         isInted = true;
         log.info("jobs初始化完成！！");
     }

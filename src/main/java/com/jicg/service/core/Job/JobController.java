@@ -1,6 +1,8 @@
-package   com.jicg.service.core.Job;
+package com.jicg.service.core.Job;
 
-import  com.jicg.service.core.Job.bean.JobInfo;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ArrayUtil;
+import com.jicg.service.core.Job.bean.JobInfo;
 import org.quartz.SchedulerException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -28,36 +30,39 @@ public class JobController {
     public List<JobInfo> list() throws SchedulerException {
         return jobService.getAll();
     }
+
     @ResponseBody
     @GetMapping(path = "/sys/api/job/pause")
     public String pause(@RequestParam String jobName, @RequestParam String jobGroup) throws SchedulerException {
-        jobService.pauseJob(jobName,jobGroup);
+        jobService.pauseJob(jobName, jobGroup);
         return "ok";
     }
+
     @ResponseBody
     @GetMapping(path = "/sys/api/job/resume")
-    public String resumeJob(String jobName, String jobGroup) throws SchedulerException {
-        jobService.resumeJob(jobName,jobGroup);
+    public String resumeJob(String jobName, String jobGroup) throws Exception {
+        jobService.resumeJob(jobName, jobGroup);
         return "ok";
     }
+
     @ResponseBody
     @GetMapping(path = "/sys/api/job/trigger")
     public String triggerJob(String jobName, String jobGroup) throws SchedulerException {
-        jobService.triggerJob(jobName,jobGroup);
+        jobService.triggerJob(jobName, jobGroup);
         return "ok";
     }
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/cron")
     public String cronJob(String jobName, String jobGroup, String cron) throws SchedulerException {
-        jobService.cronJob(jobName,jobGroup,cron);
+        jobService.cronJob(jobName, jobGroup, cron);
         return "ok";
     }
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/delete")
     public String deleteJob(String jobName, String jobGroup) throws SchedulerException {
-        jobService.deleteJob(jobName,jobGroup);
+        jobService.deleteJob(jobName, jobGroup);
         return "ok";
     }
 
