@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 @Slf4j
-public class BaseJob implements Job {
+public class BaseJob implements Job,InterruptableJob {
 
     @SneakyThrows
     @Override
@@ -57,4 +57,8 @@ public class BaseJob implements Job {
     }
 
 
+    @Override
+    public void interrupt() throws UnableToInterruptJobException {
+
+    }
 }

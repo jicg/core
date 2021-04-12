@@ -3,8 +3,8 @@ package com.jicg.service.core.Job;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
-import  com.jicg.service.core.Job.bean.JobInfo;
-import  com.jicg.service.core.Utils;
+import com.jicg.service.core.Job.bean.JobInfo;
+import com.jicg.service.core.Utils;
 import com.jicg.service.core.config.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static  com.jicg.service.core.Job.JobApplicationRunner.*;
+import static com.jicg.service.core.Job.JobApplicationRunner.*;
 
 @Slf4j
 @Service
@@ -68,7 +68,9 @@ public class JobService {
         if (StrUtil.isNotEmpty(jobInfo.getStatus())
                 && Trigger.TriggerState.PAUSED == Trigger.TriggerState.valueOf(jobInfo.getStatus())) {
             scheduler.scheduleJob(jobDetail, trigger);
+            scheduler.interrupt(trigger.getJobKey());
             scheduler.pauseJob(trigger.getJobKey());
+
         } else {
             scheduler.scheduleJob(jobDetail, trigger);
             scheduler.resumeJob(trigger.getJobKey());

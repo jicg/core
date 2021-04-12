@@ -86,7 +86,7 @@ public class JobApplicationRunner implements ApplicationRunner {
             appConfig.getJob().getPackages().forEach(pag -> finalJobInfos.addAll(getScanBean(pag)));
         }
         jobService.addJobs(jobInfos);
-        log.info("jobs初始化完成！！");
         isInted = true;
+        log.info("jobs初始化完成！！");
     }
 }
