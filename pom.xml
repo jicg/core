@@ -83,10 +83,39 @@
 <!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>*.**</exclude>
+                        <exclude>system/table_print.xlsx</exclude>
+                    </excludes>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <useUniqueVersions>false</useUniqueVersions>
+                            <mainClass>com.jicg.service.core.CoreApplication</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>./resources/</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <excludes>
+                        <exclude>*.**</exclude>
+                        <exclude>static/**</exclude>
+                        <exclude>system/**</exclude>
+                        <exclude>fonts/**</exclude>
+                        <exclude>*/*.xml</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

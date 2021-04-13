@@ -1,5 +1,6 @@
 package com.jicg.service.core.manager;
 
+import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.StrUtil;
@@ -24,9 +25,23 @@ import java.util.stream.Collectors;
 public class ManagerApplicationRunner implements ApplicationRunner {
     final static Map<String, TableInfo> tableMap = new HashMap<>();
     public static Dict tableSqls = Dict.create();
+    public void registerXls() {
+        ConverterRegistry.getInstance().putCustom(ColumnType.class, (value, defaultValue) ->
+        {
+            if (value == null || StrUtil.isEmpty("" + value)) return ColumnType.string;
+            try {
+                return ColumnType.valueOf(StrUtil.toString(value));
+            } catch (Exception e) {
+                log.error(e.getLocalizedMessage(), e);
+            }
+
+            return ColumnType.string;
+        });
+    }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        registerXls();
         reload();
     }
 
@@ -46,7 +61,6 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                     XlsUtils.readAll(file, "tables_btns", ButtonInfo.class);
             for (TableInfo tableInfo : tableInfos2) {
                 if (!StrUtil.isEmpty(tableInfo.getUrl())) continue;
-//                log.error(tableInfo.getName());
                 List<ColumnInfo> columnInfos =
                         XlsUtils.readAll(file, tableInfo.getName(), ColumnInfo.class);
                 tableInfo.setColumns(columnInfos);

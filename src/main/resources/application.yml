@@ -1,0 +1,11 @@
+server:
+  port: 8180
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+
+app:
+  job:
+    save_path: /Users/jicg/Desktop/tools/job.json
+  url: /

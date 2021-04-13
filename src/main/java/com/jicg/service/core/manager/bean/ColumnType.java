@@ -1,4 +1,4 @@
-package  com.jicg.service.core.manager.bean;
+package com.jicg.service.core.manager.bean;
 
 import cn.hutool.core.convert.Converter;
 import cn.hutool.core.convert.ConverterRegistry;
@@ -13,17 +13,4 @@ import java.lang.reflect.Type;
 @Slf4j
 public enum ColumnType {
     select, datenumber, date, check, string, textarea, object;
-
-    static {
-        ConverterRegistry.getInstance().putCustom(ColumnType.class, (value, defaultValue) ->
-        {
-            if (value == null || StrUtil.isEmpty("" + value)) return ColumnType.string;
-            try {
-                return ColumnType.valueOf(StrUtil.toString(value));
-            } catch (Exception e) {
-                log.error(e.getLocalizedMessage(), e);
-            }
-            return defaultValue;
-        });
-    }
 }

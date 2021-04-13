@@ -1,10 +1,10 @@
-package  com.jicg.service.core.manager.bean;
+package com.jicg.service.core.manager.bean;
 
 import cn.hutool.db.sql.Query;
 import cn.hutool.db.sql.SqlBuilder;
 import cn.hutool.json.JSONUtil;
-import  com.jicg.service.core.annos.XlsAlias;
-import  com.jicg.service.core.manager.bean.ColumnInfo;
+import com.jicg.service.core.annos.XlsAlias;
+import com.jicg.service.core.manager.bean.ColumnInfo;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -47,6 +47,8 @@ public class TableInfo {
     private String upTable = "";
     @XlsAlias("关联字段")
     private String upTableColumnName = "";
+    @XlsAlias("默认排序")
+    private String defOrders = "{}";
 
 
     private List<TableInfo> itemTables = new ArrayList<>();
