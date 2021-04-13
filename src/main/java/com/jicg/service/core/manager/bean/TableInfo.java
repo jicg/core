@@ -48,7 +48,7 @@ public class TableInfo {
     @XlsAlias("关联字段")
     private String upTableColumnName = "";
     @XlsAlias("默认排序")
-    private String defOrders = "{}";
+    private String defOrders = "[]";
 
 
     private List<TableInfo> itemTables = new ArrayList<>();
