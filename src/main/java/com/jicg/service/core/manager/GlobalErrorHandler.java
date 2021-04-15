@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-@ControllerAdvice
+@ControllerAdvice(basePackages = "com.jicg.service.core")
 public class GlobalErrorHandler {
     @ExceptionHandler(value = Throwable.class)
     @ResponseBody

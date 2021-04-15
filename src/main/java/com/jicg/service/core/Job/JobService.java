@@ -65,12 +65,13 @@ public class JobService {
                 .withSchedule(cron).build();
 
         if (StrUtil.isEmpty(jobInfo.getStatus())
-                || Trigger.TriggerState.PAUSED != Trigger.TriggerState.valueOf(jobInfo.getStatus())) {
-            scheduler.scheduleJob(jobDetail, trigger);
-            scheduler.resumeJob(trigger.getJobKey());
-        } else {
+                || Trigger.TriggerState.PAUSED == Trigger.TriggerState.valueOf(jobInfo.getStatus())) {
             scheduler.scheduleJob(jobDetail, trigger);
             scheduler.pauseJob(trigger.getJobKey());
+        } else {
+            scheduler.scheduleJob(jobDetail, trigger);
+            scheduler.resumeJob(trigger.getJobKey());
+
         }
     }
 

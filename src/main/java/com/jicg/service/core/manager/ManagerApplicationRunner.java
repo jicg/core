@@ -4,6 +4,7 @@ import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.jicg.service.core.manager.bean.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -47,13 +48,16 @@ public class ManagerApplicationRunner implements ApplicationRunner {
     }
 
     public static void reload() {
+        log.info("**************** start reload xlsx *********************");
         tableMap.clear();
         List<TableInfo> tableInfos = new ArrayList<>();
 
         List<File> files = FileUtil.loopFiles("system", pathname -> pathname.isFile()
                 && pathname.getName().startsWith("table_")
                 && StrUtil.endWithAnyIgnoreCase(pathname.getName(), ".xls", ".xlsx"));
+
         for (File file : files) {
+            log.info(file.getAbsolutePath());
             List<TableInfo> tableInfos2 =
                     XlsUtils.readAll(file, "tables", TableInfo.class);
             List<SelectOps> selOpts =
@@ -78,6 +82,8 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                             it -> StrUtil.equalsIgnoreCase(tableInfo.getName(), it.getTable())).collect(Collectors.toList()));
                 }
             }
+            log.info("**************** stop reload xlsx *********************");
+            log.info(JSONUtil.toJsonStr(tableInfos2));
             tableInfos.addAll(tableInfos2);
         }
         tableInfos.forEach(c -> {

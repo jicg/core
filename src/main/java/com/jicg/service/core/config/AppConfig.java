@@ -7,6 +7,7 @@ import com.jicg.service.core.Job.JobApplicationRunner;
 import com.jicg.service.core.Job.JobController;
 import com.jicg.service.core.Job.JobService;
 import com.jicg.service.core.exts.OracleClobSerializer;
+import com.jicg.service.core.manager.GlobalErrorHandler;
 import com.jicg.service.core.manager.ManagerApplicationRunner;
 import com.jicg.service.core.manager.ManagerController;
 import lombok.Data;
@@ -37,9 +38,11 @@ import java.text.SimpleDateFormat;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(AppProperties.class)
 @Import({
-        JobService.class, JobController.class, JobApplicationRunner.class,
+        JobService.class,
+        JobController.class, JobApplicationRunner.class,GlobalErrorHandler.class,
         ManagerController.class, ManagerApplicationRunner.class,
         WebMvcConfiguration.class,
+
 })
 
 
