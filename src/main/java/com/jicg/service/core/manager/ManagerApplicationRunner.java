@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class ManagerApplicationRunner implements ApplicationRunner {
     final static Map<String, TableInfo> tableMap = new HashMap<>();
     public static Dict tableSqls = Dict.create();
+
     public void registerXls() {
         ConverterRegistry.getInstance().putCustom(ColumnType.class, (value, defaultValue) ->
         {
@@ -73,7 +74,8 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                                 ).collect(Collectors.toList())
                         );
                     }
-                    tableInfo.setButtons(buttonInfos);
+                    tableInfo.setButtons(buttonInfos.stream().filter(
+                            it -> StrUtil.equalsIgnoreCase(tableInfo.getName(), it.getTable())).collect(Collectors.toList()));
                 }
             }
             tableInfos.addAll(tableInfos2);
@@ -84,6 +86,7 @@ public class ManagerApplicationRunner implements ApplicationRunner {
         tableInfos.forEach(c -> {
             int i = 0;
             for (ColumnInfo columnInfo : c.getColumns()) {
+                columnInfo.setList_size(StrUtil.length(columnInfo.getRemark()));
                 if (StrUtil.isEmpty(columnInfo.getApiName()))
                     columnInfo.setApiName(columnInfo.getName());
                 if (StrUtil.contains(columnInfo.getApiName(), ";")) {

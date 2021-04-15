@@ -26,7 +26,7 @@ import static com.jicg.service.core.Job.JobApplicationRunner.*;
 public class JobService {
     private final AppConfig appConfig;
     private final Scheduler scheduler;
-    private  List<JobInfo> stoped = new ArrayList<>();
+//    private List<JobInfo> stoped = new ArrayList<>();
 
     @Autowired
     public JobService(Scheduler scheduler, AppConfig appConfig) {
@@ -47,6 +47,7 @@ public class JobService {
         saveToFile();
     }
 
+
     private void addJobHelp(JobInfo jobInfo) throws Exception {
         JobDetail jobDetail =
                 JobBuilder.newJob(ClassUtil.loadClass(jobInfo.getJavaClass()))
@@ -63,13 +64,16 @@ public class JobService {
                 .withIdentity(jobInfo.getJobName(), jobInfo.getGroupName())
                 .withSchedule(cron).build();
 
-
         if (StrUtil.isEmpty(jobInfo.getStatus())
                 || Trigger.TriggerState.PAUSED != Trigger.TriggerState.valueOf(jobInfo.getStatus())) {
             scheduler.scheduleJob(jobDetail, trigger);
             scheduler.resumeJob(trigger.getJobKey());
+        } else {
+            scheduler.scheduleJob(jobDetail, trigger);
+            scheduler.pauseJob(trigger.getJobKey());
         }
     }
+
 
     private void saveToFile() throws SchedulerException {
         Utils.writeJsonFile2Bean(appConfig.getJob().getSavePath(), getAll());
@@ -84,31 +88,34 @@ public class JobService {
     }
 
 
-    public void pauseJob(String jobName, String jobGroup) throws SchedulerException {
+    public void pauseJob(String jobName, String jobGroup) throws Exception {
+//        checkIsNotExistsJobAndAdd(jobName, jobGroup);
         scheduler.pauseJob(JobKey.jobKey(jobName, jobGroup));
         saveToFile();
     }
 
-    public void triggerJob(String jobName, String jobGroup) throws SchedulerException {
+    public void triggerJob(String jobName, String jobGroup) throws Exception {
+//        checkIsNotExistsJobAndAdd(jobName, jobGroup);
         scheduler.triggerJob(JobKey.jobKey(jobName, jobGroup));
     }
 
     public void resumeJob(String jobName, String jobGroup) throws Exception {
-        JobKey jobKey = JobKey.jobKey(jobName, jobGroup);
-        if (!scheduler.checkExists(jobKey)) {
-            Optional<JobInfo> info = stoped.stream().filter(jobInfo -> StrUtil.equalsIgnoreCase(jobInfo.getJobName(), jobName) &&
-                    StrUtil.equalsIgnoreCase(jobInfo.getGroupName(), jobGroup))
-                    .findFirst();
-            if (info.isPresent()) {
-                info.get().setStatus(Trigger.TriggerState.NORMAL.name());
-                addJob(info.get());
-            }
-        } else {
-            scheduler.resumeJob(JobKey.jobKey(jobName, jobGroup));
-        }
-
+//        checkIsNotExistsJobAndAdd(jobName, jobGroup);
+        scheduler.resumeJob(JobKey.jobKey(jobName, jobGroup));
         saveToFile();
     }
+
+//    private void checkIsNotExistsJobAndAdd(String jobName, String jobGroup) throws Exception {
+//        JobKey jobKey = JobKey.jobKey(jobName, jobGroup);
+//        if (!scheduler.checkExists(jobKey)) {
+//            Optional<JobInfo> info = stoped.stream().filter(jobInfo -> StrUtil.equalsIgnoreCase(jobInfo.getJobName(), jobName) &&
+//                    StrUtil.equalsIgnoreCase(jobInfo.getGroupName(), jobGroup))
+//                    .findFirst();
+//            if (info.isPresent()) {
+//                addJobHelp(info.get(), true);
+//            }
+//        }
+//    }
 
 
     public void cronJob(String jobName, String jobGroup, String cron) throws SchedulerException {
@@ -150,15 +157,17 @@ public class JobService {
             }
 
         }
-        List<JobInfo> all = CollectionUtil.unionAll(jobInfos,
-                stoped.stream().filter(jobInfo -> !jobInfos.contains(jobInfo)).collect(Collectors.toList())
-        );
-        all.sort(Comparator.comparing(JobInfo::getOrder));
-        return all;
+        jobInfos.sort(Comparator.comparing(JobInfo::getOrder));
+        return jobInfos;
+//        List<JobInfo> all = CollectionUtil.unionAll(jobInfos,
+//                stoped.stream().filter(jobInfo -> !jobInfos.contains(jobInfo)).collect(Collectors.toList())
+//        );
+//        all.sort(Comparator.comparing(JobInfo::getOrder));
+//        return all;
     }
 
 
-    public void init() throws Exception {
-        addJobs(stoped);
-    }
+//    public void init() throws Exception {
+//        addJobs(stoped);
+//    }
 }

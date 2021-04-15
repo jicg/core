@@ -1,5 +1,7 @@
 package com.jicg.service.core.Job;
 
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.json.JSONUtil;
 import com.jicg.service.core.Job.bean.BaseJobAction;
@@ -15,9 +17,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author jicg on 2021/3/21
@@ -85,9 +86,14 @@ public class JobApplicationRunner implements ApplicationRunner {
             List<JobInfo> finalJobInfos = jobInfos;
             appConfig.getJob().getPackages().forEach(pag -> finalJobInfos.addAll(getScanBean(pag)));
         }
-        jobService.setStoped(jobInfos);
-        jobService.init();
-        isInted = true;
-        log.info("jobs初始化完成！！");
+        jobService.addJobs(jobInfos);
+        log.info("任务【" + jobInfos.stream().map(JobInfo::getName).collect(Collectors.joining(",")) + "】已经添加 ！！");
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                isInted = true;
+                log.info("jobs初始化完成！！");
+            }
+        }, 3000);
     }
 }

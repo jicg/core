@@ -87,7 +87,7 @@
                 <configuration>
                     <excludes>
                         <exclude>*.**</exclude>
-                        <exclude>system/table_print.xlsx</exclude>
+                        <exclude>system/**</exclude>
                     </excludes>
                     <archive>
                         <manifest>

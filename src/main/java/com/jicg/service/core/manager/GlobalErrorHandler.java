@@ -23,6 +23,15 @@ public class GlobalErrorHandler {
 
 
     public static String findSqlMsg(String message) {
+        if (message != null && message.matches("[^*]+ORA-[0-9]*:[^*]*")) {
+            String pattern = "ORA-[0-9]+:(.*)\n";
+            Pattern r = Pattern.compile(pattern);
+            Matcher m = r.matcher(message);
+            if (m.find()) {
+                return m.group().replaceAll("ORA-[0-9]+:", "").trim();
+            }
+        }
+
         if (message != null && message.matches("[^*]+Exception[^*]+ORA-[0-9]*:[^*]*")) {
             String pattern = "ORA-[0-9]+:(.*)\n";
             Pattern r = Pattern.compile(pattern);

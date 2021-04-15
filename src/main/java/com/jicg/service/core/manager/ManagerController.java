@@ -1,34 +1,41 @@
-package  com.jicg.service.core.manager;
+package com.jicg.service.core.manager;
 
 import cn.hutool.cache.file.LFUFileCache;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateBetween;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.db.DbUtil;
-import cn.hutool.db.Entity;
-import cn.hutool.db.Page;
-import cn.hutool.db.PageResult;
+import cn.hutool.db.*;
 import cn.hutool.db.sql.*;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.log.level.Level;
-import  com.jicg.service.core.Utils;
-import  com.jicg.service.core.database.DB4BosFn;
-import  com.jicg.service.core.database.DBCore;
-import  com.jicg.service.core.manager.bean.ColumnInfo;
-import  com.jicg.service.core.manager.bean.ColumnType;
-import  com.jicg.service.core.manager.bean.TableInfo;
+import com.jicg.service.core.Utils;
+import com.jicg.service.core.database.DB4BosFn;
+import com.jicg.service.core.database.DBCore;
+import com.jicg.service.core.manager.bean.ButtonInfo;
+import com.jicg.service.core.manager.bean.ColumnInfo;
+import com.jicg.service.core.manager.bean.ColumnType;
+import com.jicg.service.core.manager.bean.TableInfo;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
+import sun.nio.ch.IOUtil;
 
+import java.awt.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
@@ -39,10 +46,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ManagerController {
 
-    LFUFileCache cache = new LFUFileCache(1000, 1024 * 10, 2000);
+    LFUFileCache cache = new LFUFileCache(1000, 1024 * 10, 1);
 
     @GetMapping(path = "/manager/")
-    public String index()  {
+    public String index() {
         return "redirect:/manager/index.html";
     }
 
@@ -61,6 +68,49 @@ public class ManagerController {
                     .build();
         }).collect(Collectors.toList());
     }
+
+    @PostMapping("/sys/manager/api/{tableName}/run/{btn}")
+    @ResponseBody
+    public String execBtn(@PathVariable("tableName") String tableName, @PathVariable("btn") String btnName,
+                          @RequestBody List<String> data) throws Exception {
+        TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
+        if (tf == null) throw new RuntimeException("表不存在：" + tableName);
+        ButtonInfo btn = tf.getButtons().stream().filter(it -> StrUtil.equalsIgnoreCase(it.getName(), btnName)).findFirst().orElseThrow(() -> new RuntimeException("按钮不存在【" + tableName + "】"));
+        if (data == null) data = ListUtil.toList("");
+        Connection conn = null;
+        CallableStatement call = null;
+        String msg = "ok";
+        try {
+            conn = Db.use().getConnection();
+            conn.setAutoCommit(false);
+            data.add("jicg");
+            Object[] prams = data.toArray();
+            call = StatementUtil.prepareCall(conn,
+                    "call " + btn.getProcName() + "(" + data.stream().map(it -> "?").collect(Collectors.joining(",")) + ",?,?" + ")",
+                    prams
+            );
+            int len = prams.length;
+            call.registerOutParameter(len + 1, java.sql.Types.INTEGER);
+            call.registerOutParameter(len + 2, java.sql.Types.VARCHAR);
+            call.execute();
+            int code = call.getInt(len + 1);
+            msg = call.getString(len + 2);
+            if (code != 0) {
+                throw new RuntimeException(msg);
+            }
+            conn.commit();
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.rollback();
+            }
+            throw e;
+        } finally {
+            IoUtil.close(call);
+            IoUtil.close(conn);
+        }
+        return msg;
+    }
+
 
     @PostMapping("/sys/manager/api/{tableName}/list")
     @ResponseBody
@@ -127,11 +177,11 @@ public class ManagerController {
         return ManagerApplicationRunner.tableMap.keySet().stream().map(ManagerApplicationRunner.tableMap::get).collect(Collectors.toList());
     }
 
-    @GetMapping("/sys/manager/{tableName}.js")
+    @GetMapping("/sys/manager/extends.js")
     @ResponseBody
-    public String getJS(@PathVariable String tableName) {
+    public String getJS() {
         try {
-            byte[] bytes = cache.getFileBytes(FileUtil.file("system/" + tableName + ".js"));
+            byte[] bytes = cache.getFileBytes(FileUtil.file("system/extends.js"));
             return StrUtil.str(bytes, "UTF8");
         } catch (Exception e) {
             return "";

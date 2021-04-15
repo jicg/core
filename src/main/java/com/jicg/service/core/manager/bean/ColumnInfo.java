@@ -1,6 +1,6 @@
-package  com.jicg.service.core.manager.bean;
+package com.jicg.service.core.manager.bean;
 
-import  com.jicg.service.core.annos.XlsAlias;
+import com.jicg.service.core.annos.XlsAlias;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -27,6 +27,8 @@ public class ColumnInfo {
     //显示长度
     @XlsAlias("显示长度")
     private int view_size = 1;
+    @XlsAlias("列长度")
+    private int list_size = 0;
     //选项
     @XlsAlias("选项")
     private String selGroup;
@@ -40,7 +42,6 @@ public class ColumnInfo {
     @XlsAlias("api名称")
     private String apiName;
     private String linkTableName = "";
-
 
 
     private List<SelectOps> selectOps = new ArrayList<>();

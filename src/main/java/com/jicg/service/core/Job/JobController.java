@@ -27,13 +27,13 @@ public class JobController {
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/list")
-    public List<JobInfo> list() throws SchedulerException {
+    public List<JobInfo> list() throws Exception {
         return jobService.getAll();
     }
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/pause")
-    public String pause(@RequestParam String jobName, @RequestParam String jobGroup) throws SchedulerException {
+    public String pause(@RequestParam String jobName, @RequestParam String jobGroup) throws Exception {
         jobService.pauseJob(jobName, jobGroup);
         return "ok";
     }
@@ -47,21 +47,21 @@ public class JobController {
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/trigger")
-    public String triggerJob(String jobName, String jobGroup) throws SchedulerException {
+    public String triggerJob(String jobName, String jobGroup) throws Exception {
         jobService.triggerJob(jobName, jobGroup);
         return "ok";
     }
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/cron")
-    public String cronJob(String jobName, String jobGroup, String cron) throws SchedulerException {
+    public String cronJob(String jobName, String jobGroup, String cron) throws Exception {
         jobService.cronJob(jobName, jobGroup, cron);
         return "ok";
     }
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/delete")
-    public String deleteJob(String jobName, String jobGroup) throws SchedulerException {
+    public String deleteJob(String jobName, String jobGroup) throws Exception {
         jobService.deleteJob(jobName, jobGroup);
         return "ok";
     }

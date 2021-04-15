@@ -1,11 +1,11 @@
-package  com.jicg.service.core.Job;
+package com.jicg.service.core.Job;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import  com.jicg.service.core.Job.bean.BaseJobAction;
-import  com.jicg.service.core.Job.bean.JobInfo;
+import com.jicg.service.core.Job.bean.BaseJobAction;
+import com.jicg.service.core.Job.bean.JobInfo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -23,12 +23,17 @@ import java.lang.reflect.Method;
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 @Slf4j
-public class BaseJob implements Job,InterruptableJob {
+public class BaseJob implements Job, InterruptableJob {
 
     @SneakyThrows
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        if (!JobApplicationRunner.isInted) return;
+
+        if (!JobApplicationRunner.isInted) {
+            String name = context.getMergedJobDataMap().getString(JobApplicationRunner.NAME_KEY);
+            log.error("任务【" + name + "】----程序还未初始化成功，不执行---");
+            return;
+        }
         String name = context.getMergedJobDataMap().getString(JobApplicationRunner.NAME_KEY);
         String json = context.getMergedJobDataMap().getString(JobApplicationRunner.DATA_KEY);
         if (StrUtil.isNotEmpty(json) && JSONUtil.isJson(json)) {
