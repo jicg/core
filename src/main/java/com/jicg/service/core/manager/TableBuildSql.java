@@ -1,12 +1,12 @@
-package  com.jicg.service.core.manager;
+package com.jicg.service.core.manager;
 
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.sql.SqlBuilder;
 import cn.hutool.json.JSONUtil;
-import  com.jicg.service.core.manager.bean.ColumnInfo;
-import  com.jicg.service.core.manager.bean.ColumnType;
-import  com.jicg.service.core.manager.bean.TableInfo;
+import com.jicg.service.core.manager.bean.ColumnInfo;
+import com.jicg.service.core.manager.bean.ColumnType;
+import com.jicg.service.core.manager.bean.TableInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static  com.jicg.service.core.manager.ManagerApplicationRunner.tableMap;
+import static com.jicg.service.core.manager.ManagerApplicationRunner.tableMap;
 
 /**
  * @author jicg on 2021/4/4
@@ -104,7 +104,7 @@ public class TableBuildSql {
                 return mainTable.getName() + "." + c.getName() + " as " + c.getApiName() + " , " +
                         linkInfo.getAlias() + "." + linkInfo.getLinkTable().getShowColumn() + " as " + c.getApiName() + "_desc";
             }
-            return mainTable.getName() + "." + c.getName() + " as " + c.getName();
+            return mainTable.getName() + "." + c.getName() + " as " + c.getApiName();
 
         }).collect(Collectors.joining(","));
         StringBuffer fromSql = new StringBuffer();
@@ -123,6 +123,38 @@ public class TableBuildSql {
                     .append(upLink.getMainColumn().getName()).append(" = ").append(linkInfo.getAlias()).append(".id  )");
         }
         return fromSql.insert(0, "select * from (").append(")").toString();
+    }
+
+    public String getAlias(String columnName) {
+        String upKey = commaRemoveLast(columnName);
+        String mainAlias = mainTable.getName();
+        if (StrUtil.isNotEmpty(upKey)) {
+            mainAlias = aliasMap.get(upKey).alias;
+        }
+        return mainAlias;
+    }
+
+    public String toInSql() {
+        String realName = mainTable.getRealTable();
+        String table = StrUtil.nullToDefault(realName, mainTable.getName());
+
+        StringBuffer fromSql = new StringBuffer();
+        fromSql.append("select ").append(mainTable.getName() + ".id");
+        fromSql.append(" from ").append(table).append(" ").append(mainTable.getName());
+        for (String key : linkColumnStr) {
+            String upKey = commaRemoveLast(key);
+            String mainAlias = mainTable.getName();
+            if (StrUtil.isNotEmpty(upKey)) {
+                mainAlias = aliasMap.get(upKey).alias;
+            }
+            LinkInfo upLink = aliasMap.get(key);
+            LinkInfo linkInfo = aliasMap.get(key);
+            fromSql.append(" left join ").append(getRealName(linkInfo.getLinkTable())).append(" ")
+                    .append(linkInfo.getAlias()).append(" on (").append(mainAlias).append(".")
+                    .append(upLink.getMainColumn().getName()).append(" = ").append(linkInfo.getAlias()).append(".id  )");
+        }
+        return fromSql.toString();
+//        return fromSql.insert(0, "select * from (").append(")").toString();
     }
 
 

@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import sun.nio.ch.IOUtil;
 
 import java.awt.*;
+import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -118,14 +119,15 @@ public class ManagerController {
                            @RequestBody QueryParam param) throws SQLException {
         TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
         String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName);
+
         if (sql == null) {
             sql = new TableBuildSql(tf).toSql();
             ManagerApplicationRunner.tableSqls.get(tableName, sql);
         }
         Entity where = param.where;
         tf.getColumns().stream().filter(columnInfo -> columnInfo.getView_type() == ColumnType.date).forEach(columnInfo -> {
-            if (where.containsKey(columnInfo.getName())) {
-                List<String> dates = (List<String>) where.get(columnInfo.getName());
+            if (where.containsKey(columnInfo.getApiName())) {
+                List<String> dates = (List<String>) where.get(columnInfo.getApiName());
                 Date datebeg = DateUtil.parse(dates.get(0), "yyyyMMdd HH:mm:ss");
                 Date dateend = DateUtil.parse(dates.get(1), "yyyyMMdd HH:mm:ss");
                 Condition condition = new Condition(columnInfo.getName(), "BETWEEN", datebeg);
@@ -143,6 +145,57 @@ public class ManagerController {
         return Dict.create().set("total", pageResult.getTotal()).set("page", pageResult.getPage() + 1)
                 .set("pageSize", pageResult.getPageSize()).set("totalPage", pageResult.getTotalPage())
                 .set("datas", pageResult);
+    }
+
+
+    @PostMapping("/sys/manager/api/{tableName}/sql")
+    @ResponseBody
+    public String getObjectSql(@PathVariable("tableName") String tableName,
+                               @RequestBody QueryParam param) throws SQLException {
+        TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
+        TableBuildSql tableBuildSql = new TableBuildSql(tf);
+        String sql = tableBuildSql.toInSql();
+        if (param.where.size() == 0) return sql;
+        Entity where = Entity.create();
+        param.where.keySet().forEach(key -> {
+            if (key.contains(".")) {
+                where.set(key, param.where.get(key));
+            } else {
+
+                Optional<ColumnInfo> column = tf.getColumns().stream().filter(columnInfo -> columnInfo.getApiName().equalsIgnoreCase(key)).findFirst();
+                String columnName = key;
+                if (column.isPresent()) {
+                    columnName = column.get().getName();
+                    if (column.get().getView_type() == ColumnType.date) {
+                        List<String> dates = (List<String>) param.where.get(key);
+                        Condition condition = new Condition(false);
+                        condition.setField("");
+                        condition.setOperator("");
+                        condition.setValue(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName)
+                                + " BETWEEN " + "to_date('" + dates.get(0) + "','yyyyMMdd HH24:mi:ss')"
+                                + " AND to_date('" + dates.get(1) + "','yyyyMMdd HH24:mi:ss')");
+                        where.set("", condition);
+                        return;
+                    }
+                }
+                where.set(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName), param.where.get(key));
+            }
+        });
+
+        SqlBuilder sqlBuilder = SqlBuilder.of(sql)
+                .where(Query.of(where).getWhere());
+        String strSql = sqlBuilder.toString();
+        for (int i = 0; i < sqlBuilder.getParamValues().size(); i++) {
+            Object val = sqlBuilder.getParamValues().get(i);
+            if (val instanceof String) {
+                strSql = strSql.replaceFirst("\\?", "'" + val + "'");
+            } else if (val instanceof Number) {
+                strSql = strSql.replaceFirst("\\?", "" + val);
+            } else {
+                strSql = strSql.replaceFirst("\\?", "'" + val + "'");
+            }
+        }
+        return strSql;
     }
 
 
