@@ -10,6 +10,7 @@ import cn.hutool.core.lang.Dict;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.XmlUtil;
 import cn.hutool.db.*;
 import cn.hutool.db.sql.*;
 import cn.hutool.json.JSONUtil;
@@ -150,18 +151,21 @@ public class ManagerController {
 
     @PostMapping("/sys/manager/api/{tableName}/sql")
     @ResponseBody
-    public String getObjectSql(@PathVariable("tableName") String tableName,
+    public Object getObjectSql(@PathVariable("tableName") String tableName,
+                               @RequestParam(value = "type", defaultValue = "json") String type,
                                @RequestBody QueryParam param) throws SQLException {
         TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
         TableBuildSql tableBuildSql = new TableBuildSql(tf);
         String sql = tableBuildSql.toInSql();
-        if (param.where.size() == 0) return sql;
+        if (param == null || param.where.size() == 0) return StrUtil.equalsIgnoreCase(type, "xml") ?
+                XmlUtil.mapToXml(Dict.create().set("sql", sql).set("desc", "全部"), "filter") : Dict.create().set("sql", sql).set("desc", "全部");
         Entity where = Entity.create();
+        List<String> descs = new ArrayList<>();
         param.where.keySet().forEach(key -> {
             if (key.contains(".")) {
+                descs.add("特殊条件[" + key + "]:" + param.where.get(key) );
                 where.set(key, param.where.get(key));
             } else {
-
                 Optional<ColumnInfo> column = tf.getColumns().stream().filter(columnInfo -> columnInfo.getApiName().equalsIgnoreCase(key)).findFirst();
                 String columnName = key;
                 if (column.isPresent()) {
@@ -175,10 +179,15 @@ public class ManagerController {
                                 + " BETWEEN " + "to_date('" + dates.get(0) + "','yyyyMMdd HH24:mi:ss')"
                                 + " AND to_date('" + dates.get(1) + "','yyyyMMdd HH24:mi:ss')");
                         where.set("", condition);
+                        descs.add( column.get().getRemark() + ": " + dates.get(0) + "～" + dates.get(1) );
                         return;
                     }
+                    descs.add( column.get().getRemark() + ": " + param.where.get(key) );
+                } else {
+                    descs.add("特殊条件[" + key + "]:" + param.where.get(key) );
                 }
                 where.set(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName), param.where.get(key));
+
             }
         });
 
@@ -195,7 +204,9 @@ public class ManagerController {
                 strSql = strSql.replaceFirst("\\?", "'" + val + "'");
             }
         }
-        return strSql;
+        Dict dict = Dict.create().set("sql", strSql).set("desc", descs.stream().map(s-> "( "+s+" )").collect(Collectors.joining(" 并且 ")));
+        return StrUtil.equalsIgnoreCase(type, "xml") ?
+                XmlUtil.mapToXml(dict, "filter").getChildNodes() : dict;
     }
 
 
