@@ -1,6 +1,5 @@
 package  com.jicg.service.core.database;
 
-import ch.qos.logback.core.db.dialect.DBUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.ArrayUtil;
@@ -8,16 +7,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.DbUtil;
 import cn.hutool.db.Entity;
-import cn.hutool.db.Session;
-import cn.hutool.db.ds.pooled.DbConfig;
-import cn.hutool.log.level.Level;
-import cn.hutool.setting.dialect.PropsUtil;
 import  com.jicg.service.core.Utils;
-import org.springframework.beans.BeanUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -28,9 +21,9 @@ import java.util.stream.Collectors;
 
 public class DBCore {
 
-    static {
-        DbUtil.setShowSqlGlobal(true, true, true, Level.INFO);
-    }
+//    static {
+//        DbUtil.setShowSqlGlobal(true, true, true, Level.INFO);
+//    }
 
     public static int batchSize = 1000;
 

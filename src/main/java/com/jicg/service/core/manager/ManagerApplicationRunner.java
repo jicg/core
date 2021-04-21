@@ -4,6 +4,7 @@ import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.ds.pooled.DbConfig;
 import cn.hutool.json.JSONUtil;
 import com.jicg.service.core.manager.bean.*;
 import lombok.extern.slf4j.Slf4j;
