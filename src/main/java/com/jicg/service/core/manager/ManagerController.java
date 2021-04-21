@@ -13,6 +13,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import cn.hutool.db.*;
 import cn.hutool.db.sql.*;
+import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.log.level.Level;
 import com.jicg.service.core.Utils;
@@ -126,17 +127,30 @@ public class ManagerController {
             ManagerApplicationRunner.tableSqls.get(tableName, sql);
         }
         Entity where = param.where;
-        tf.getColumns().stream().filter(columnInfo -> columnInfo.getView_type() == ColumnType.date).forEach(columnInfo -> {
-            if (where.containsKey(columnInfo.getApiName())) {
+        tf.getColumns().stream().forEach(columnInfo -> {
+            if (columnInfo.getView_type() == ColumnType.date && where.containsKey(columnInfo.getApiName())) {
                 List<String> dates = (List<String>) where.get(columnInfo.getApiName());
                 Date datebeg = DateUtil.parse(dates.get(0), "yyyyMMdd HH:mm:ss");
                 Date dateend = DateUtil.parse(dates.get(1), "yyyyMMdd HH:mm:ss");
-                Condition condition = new Condition(columnInfo.getName(), "BETWEEN", datebeg);
+                Condition condition = new Condition(columnInfo.getApiName(), "BETWEEN", datebeg);
                 condition.setValue(datebeg);
                 condition.setSecondValue(dateend);
                 where.set(columnInfo.getName(), condition);
             }
+            if (columnInfo.getView_type() == ColumnType.object && where.containsKey(columnInfo.getApiName())) {
+                String valueData = "" + where.get(columnInfo.getApiName());
+                if (JSONUtil.isJson(valueData)) {
+                    JSON json = JSONUtil.parse(valueData);
+                    Condition condition = new Condition(false);
+                    condition.setField(columnInfo.getApiName());
+                    condition.setOperator("");
+                    condition.setValue(json.getByPath("sql"));
+                    where.set(columnInfo.getName(), condition);
+                    return;
+                }
+            }
         });
+
         Order[] orders = param.orders.stream().map(queryOrder -> new Order(queryOrder.field, StrUtil.equalsIgnoreCase(queryOrder.order, "asc") ?
                 Direction.ASC : Direction.DESC)).toArray(Order[]::new);
         Page page = new Page(param.page - 1, param.pageSize);
@@ -162,33 +176,44 @@ public class ManagerController {
         Entity where = Entity.create();
         List<String> descs = new ArrayList<>();
         param.where.keySet().forEach(key -> {
-            if (key.contains(".")) {
-                descs.add("特殊条件[" + key + "]:" + param.where.get(key) );
-                where.set(key, param.where.get(key));
-            } else {
-                Optional<ColumnInfo> column = tf.getColumns().stream().filter(columnInfo -> columnInfo.getApiName().equalsIgnoreCase(key)).findFirst();
-                String columnName = key;
-                if (column.isPresent()) {
-                    columnName = column.get().getName();
-                    if (column.get().getView_type() == ColumnType.date) {
-                        List<String> dates = (List<String>) param.where.get(key);
+            Optional<ColumnInfo> column = tf.getColumns().stream().filter(columnInfo -> columnInfo.getApiName().equalsIgnoreCase(key)).findFirst();
+            String columnName = key;
+            if (column.isPresent()) {
+                columnName = column.get().getName();
+                if (column.get().getView_type() == ColumnType.date) {
+                    List<String> dates = (List<String>) param.where.get(key);
+                    Condition condition = new Condition(false);
+                    condition.setField("");
+                    condition.setOperator("");
+                    condition.setValue(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName)
+                            + " BETWEEN " + "to_date('" + dates.get(0) + "','yyyyMMdd HH24:mi:ss')"
+                            + " AND to_date('" + dates.get(1) + "','yyyyMMdd HH24:mi:ss')");
+                    where.set("", condition);
+                    descs.add(column.get().getRemark() + ": " + dates.get(0) + "～" + dates.get(1));
+                    return;
+                }
+                if (column.get().getView_type() == ColumnType.object) {
+                    String valueData = "" + param.where.get(key);
+                    if (JSONUtil.isJson(valueData)) {
+                        JSON json = JSONUtil.parse(valueData);
                         Condition condition = new Condition(false);
                         condition.setField("");
                         condition.setOperator("");
-                        condition.setValue(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName)
-                                + " BETWEEN " + "to_date('" + dates.get(0) + "','yyyyMMdd HH24:mi:ss')"
-                                + " AND to_date('" + dates.get(1) + "','yyyyMMdd HH24:mi:ss')");
-                        where.set("", condition);
-                        descs.add( column.get().getRemark() + ": " + dates.get(0) + "～" + dates.get(1) );
+                        condition.setValue(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName) + " " + json.getByPath("sql"));
+                        where.set(column.get().getApiName(), condition);
+                        descs.add(column.get().getRemark() + ": " + json.getByPath("desc"));
                         return;
                     }
-                    descs.add( column.get().getRemark() + ": " + param.where.get(key) );
-                } else {
-                    descs.add("特殊条件[" + key + "]:" + param.where.get(key) );
                 }
-                where.set(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName), param.where.get(key));
-
+                descs.add(column.get().getRemark() + ": " + param.where.get(key));
+            } else {
+                descs.add("特殊条件[" + key + "]:" + param.where.get(key));
+                where.set(key, param.where.get(key));
+//                descs.add("特殊条件[" + key + "]:" + param.where.get(key));
             }
+            where.set(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName), param.where.get(key));
+
+
         });
 
         SqlBuilder sqlBuilder = SqlBuilder.of(sql)
@@ -204,7 +229,7 @@ public class ManagerController {
                 strSql = strSql.replaceFirst("\\?", "'" + val + "'");
             }
         }
-        Dict dict = Dict.create().set("sql", strSql).set("desc", descs.stream().map(s-> "( "+s+" )").collect(Collectors.joining(" 并且 ")));
+        Dict dict = Dict.create().set("sql", strSql).set("desc", descs.stream().map(s -> "( " + s + " )").collect(Collectors.joining(" 并且 ")));
         return StrUtil.equalsIgnoreCase(type, "xml") ?
                 XmlUtil.mapToXml(dict, "filter").getChildNodes() : dict;
     }
