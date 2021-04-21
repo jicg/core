@@ -9,6 +9,7 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import cn.hutool.db.*;
@@ -68,8 +69,9 @@ public class ManagerController {
                     .put("name", tableInfo.getName())
                     .put("remark", tableInfo.getRemark())
                     .put("url", tableInfo.getUrl())
+                    .put("orderno", tableInfo.getOrderno())
                     .build();
-        }).collect(Collectors.toList());
+        }).sorted((map1, map2) -> ObjectUtil.compare(MapUtil.getInt(map1, "orderno"), MapUtil.getInt(map2, "orderno"), true)).collect(Collectors.toList());
     }
 
     @PostMapping("/sys/manager/api/{tableName}/run/{btn}")
