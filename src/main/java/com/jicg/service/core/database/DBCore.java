@@ -21,9 +21,7 @@ import java.util.stream.Collectors;
 
 public class DBCore {
 
-//    static {
-//        DbUtil.setShowSqlGlobal(true, true, true, Level.INFO);
-//    }
+
 
     public static int batchSize = 1000;
 

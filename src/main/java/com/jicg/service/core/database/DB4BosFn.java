@@ -72,8 +72,6 @@ public class DB4BosFn {
                 ps.executeBatch();
                 ids.addAll(getIds(ps));
             }
-
-
         }
         ps.executeBatch();
         ids.addAll(getIds(ps));
@@ -165,10 +163,5 @@ public class DB4BosFn {
         }
     }
 
-//    public PageResult<Entity> page(Connection conn, Collection<String> fields, Entity where, Page page) throws SQLException {
-//        final PageResultHandler pageResultHandler = new PageResultHandler(
-//                new PageResult<>(page.getPageNumber(), page.getPageSize(), (int) count(conn, where)),
-//                this.caseInsensitive);
-//        return page(conn, fields, where, page, pageResultHandler);
-//    }
+
 }

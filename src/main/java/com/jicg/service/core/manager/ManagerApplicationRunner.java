@@ -49,7 +49,7 @@ public class ManagerApplicationRunner implements ApplicationRunner {
     }
 
     public static void reload() {
-        log.info("**************** start reload xlsx *********************");
+//        log.info("**************** start reload xlsx *********************");
         tableMap.clear();
         List<TableInfo> tableInfos = new ArrayList<>();
 
@@ -58,7 +58,7 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                 && StrUtil.endWithAnyIgnoreCase(pathname.getName(), ".xls", ".xlsx"));
 
         for (File file : files) {
-            log.info(file.getAbsolutePath());
+//            log.info(file.getAbsolutePath());
             List<TableInfo> tableInfos2 =
                     XlsUtils.readAll(file, "tables", TableInfo.class);
             List<SelectOps> selOpts =
@@ -83,8 +83,8 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                             it -> StrUtil.equalsIgnoreCase(tableInfo.getName(), it.getTable())).collect(Collectors.toList()));
                 }
             }
-            log.info("**************** stop reload xlsx *********************");
-            log.info(JSONUtil.toJsonStr(tableInfos2));
+//            log.info("**************** stop reload xlsx *********************");
+//            log.info(JSONUtil.toJsonStr(tableInfos2));
             tableInfos.addAll(tableInfos2);
         }
         tableInfos.forEach(c -> {
