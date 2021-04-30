@@ -10,6 +10,7 @@ import com.jicg.service.core.manager.bean.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  * @author jicg on 2021/3/31
  */
 @Slf4j
+@Order(100)
 @Component
 public class ManagerApplicationRunner implements ApplicationRunner {
     final static Map<String, TableInfo> tableMap = new HashMap<>();
