@@ -60,7 +60,7 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                 && StrUtil.endWithAnyIgnoreCase(pathname.getName(), ".xls", ".xlsx"));
 
         for (File file : files) {
-//            log.info(file.getAbsolutePath());
+            log.info(file.getAbsolutePath());
             List<TableInfo> tableInfos2 =
                     XlsUtils.readAll(file, "tables", TableInfo.class);
             List<SelectOps> selOpts =
@@ -85,8 +85,8 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                             it -> StrUtil.equalsIgnoreCase(tableInfo.getName(), it.getTable())).collect(Collectors.toList()));
                 }
             }
-//            log.info("**************** stop reload xlsx *********************");
-//            log.info(JSONUtil.toJsonStr(tableInfos2));
+            log.info("**************** stop reload xlsx *********************");
+            log.info(JSONUtil.toJsonStr(tableInfos2));
             tableInfos.addAll(tableInfos2);
         }
         tableInfos.forEach(c -> {
@@ -95,7 +95,8 @@ public class ManagerApplicationRunner implements ApplicationRunner {
         tableInfos.forEach(c -> {
             int i = 0;
             for (ColumnInfo columnInfo : c.getColumns()) {
-                columnInfo.setList_size(StrUtil.length(columnInfo.getRemark()));
+                if (columnInfo.getList_size() == 0)
+                    columnInfo.setList_size(StrUtil.length(columnInfo.getRemark()));
                 if (StrUtil.isEmpty(columnInfo.getApiName()))
                     columnInfo.setApiName(columnInfo.getName());
                 if (StrUtil.contains(columnInfo.getApiName(), ";")) {

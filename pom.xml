@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.jicg.service</groupId>
     <artifactId>core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>core</name>
     <description>Demo project for Spring Boot</description>
     <properties>
@@ -110,7 +110,7 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <excludes>
-                        <exclude>*.**</exclude>
+                        <exclude>*.setting</exclude>
                         <exclude>static/**</exclude>
                         <exclude>system/**</exclude>
                         <exclude>fonts/**</exclude>
