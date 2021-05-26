@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author jicg on 2021/3/31
@@ -68,10 +69,45 @@ public class ManagerController {
                     new HashMap<String, Object>())
                     .put("name", tableInfo.getName())
                     .put("remark", tableInfo.getRemark())
+                    .put("group", tableInfo.getGroup())
                     .put("url", tableInfo.getUrl())
                     .put("orderno", tableInfo.getOrderno())
                     .build();
         }).sorted((map1, map2) -> ObjectUtil.compare(MapUtil.getInt(map1, "orderno"), MapUtil.getInt(map2, "orderno"), true)).collect(Collectors.toList());
+    }
+
+
+    @GetMapping("/sys/manager/api/menu/list2")
+    @ResponseBody
+    public List<Map<String, Object>> getMenus2() {
+        List<String> strs = ManagerApplicationRunner.tableMap.keySet().stream().filter(key -> StrUtil.equalsIgnoreCase(
+                ManagerApplicationRunner.tableMap.get(key).getIsmenu(), "Y"
+        )).collect(Collectors.toList());
+        List<Dict> dicts = new ArrayList<>();
+        List<String> groups = new ArrayList<>();
+        List<TableInfo> menuList = strs.stream().map(ManagerApplicationRunner.tableMap::get).collect(Collectors.toList());
+        strs.forEach(key -> {
+            TableInfo tableInfo = ManagerApplicationRunner.tableMap.get(key);
+            Dict dict = Dict.create();
+            if (StrUtil.isEmpty(tableInfo.getGroup())) {
+                dict.set("name", tableInfo.getName())
+                        .set("remark", tableInfo.getRemark())
+                        .set("group", tableInfo.getGroup())
+                        .set("url", tableInfo.getUrl())
+                        .set("orderno", tableInfo.getOrderno());
+            } else {
+                if (groups.contains(tableInfo.getGroup())) {
+                    return;
+                }
+                groups.add(tableInfo.getGroup());
+                dict.set("group", tableInfo.getGroup())
+                        .set("menus", menuList.stream().filter(d -> StrUtil.equals(d.getGroup(), tableInfo.getGroup()))
+                                .collect(Collectors.toList()))
+                        .set("orderno", tableInfo.getOrderno());
+            }
+            dicts.add(dict);
+        });
+        return dicts.stream().sorted((map1, map2) -> ObjectUtil.compare(MapUtil.getInt(map1, "orderno"), MapUtil.getInt(map2, "orderno"), true)).collect(Collectors.toList());
     }
 
     @PostMapping("/sys/manager/api/{tableName}/run/{btn}")

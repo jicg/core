@@ -1,6 +1,7 @@
 package com.jicg.service.core.config;
 
 import cn.hutool.core.collection.ListUtil;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.jicg.service.core.Job.JobApplicationRunner;
@@ -39,7 +40,7 @@ import java.text.SimpleDateFormat;
 @EnableConfigurationProperties(AppProperties.class)
 @Import({
         JobService.class,
-        JobController.class, JobApplicationRunner.class,GlobalErrorHandler.class,
+        JobController.class, JobApplicationRunner.class, GlobalErrorHandler.class,
         ManagerController.class, ManagerApplicationRunner.class,
         WebMvcConfiguration.class,
 
@@ -53,15 +54,21 @@ public class AppConfig {
         this.appProperties = appProperties;
     }
 
+    //    @Bean
+//    public ObjectMapper getJson() {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        SimpleModule module = new SimpleModule();
+//        module.addSerializer(Clob.class, new OracleClobSerializer());
+//        objectMapper.registerModule(module);
+//        DateFormat df = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+//        objectMapper.setDateFormat(df);
+//        return objectMapper;
+//    }
     @Bean
-    public ObjectMapper getJson() {
-        ObjectMapper objectMapper = new ObjectMapper();
+    public Module dynamoClobDeserializer() {
         SimpleModule module = new SimpleModule();
         module.addSerializer(Clob.class, new OracleClobSerializer());
-        objectMapper.registerModule(module);
-        DateFormat df = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-        objectMapper.setDateFormat(df);
-        return objectMapper;
+        return module;
     }
 
     public AppProperties.JobConfig getJob() {

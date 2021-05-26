@@ -25,6 +25,9 @@ public class TableInfo {
     // 描述
     @XlsAlias("描述")
     private String remark;
+    // 描述
+    @XlsAlias("类别")
+    private String group;
     // 序号
     @XlsAlias("序号")
     private Integer orderno;
