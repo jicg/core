@@ -1,0 +1,1 @@
+import{f as a,p as s,g as e,r,o as t,c,l as o,k as d}from"./vendor.045e14f3.js";var f=a({props:{},setup:(a,s)=>({}),name:"Welcome"});const n=o();s("data-v-571f5c1a");const p=d(" create by jicg");e();const l=n(((a,s,e,o,d,f)=>{const l=r("el-header");return t(),c(l,{class:"asdfasdfas"},{default:n((()=>[p])),_:1})}));f.render=l,f.__scopeId="data-v-571f5c1a";export default f;

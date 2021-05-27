@@ -84,10 +84,13 @@ public class JobApplicationRunner implements ApplicationRunner {
             e.printStackTrace();
             log.error(e.getLocalizedMessage(), e);
         }
-        if (jobInfos.size() <= 0 && appConfig.getJob().getPackages().size() > 0) {
-            List<JobInfo> finalJobInfos = jobInfos;
-            appConfig.getJob().getPackages().forEach(pag -> finalJobInfos.addAll(getScanBean(pag)));
+        List<JobInfo> jobInfoScans = new ArrayList<>();
+        if (appConfig.getJob().getPackages().size() > 0) {
+            appConfig.getJob().getPackages().forEach(pag -> jobInfoScans.addAll(getScanBean(pag)));
         }
+
+        List<JobInfo> finalJobInfos = jobInfos;
+        jobInfos.addAll(jobInfoScans.stream().filter(jobInfo -> !finalJobInfos.contains(jobInfo)).collect(Collectors.toList()));
         jobService.addJobs(jobInfos);
         log.info("任务【" + jobInfos.stream().map(JobInfo::getName).collect(Collectors.joining(",")) + "】已经添加 ！！");
         new Timer().schedule(new TimerTask() {
