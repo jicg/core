@@ -35,12 +35,16 @@ public class ColumnInfo {
     //是否查询
     @XlsAlias("是否查询")
     private String isQuery = "N";
+    @XlsAlias("默认查询")
+    private String queryDefault = "";
     @XlsAlias("是否排序")
     private String isSort = "Y";
     @XlsAlias("关联表")
     private String linkTable = "";
     @XlsAlias("api名称")
     private String apiName;
+    @XlsAlias("是否可用")
+    private String isactive = "Y";
     private String linkTableName = "";
 
 

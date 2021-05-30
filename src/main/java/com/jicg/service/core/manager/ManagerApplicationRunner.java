@@ -70,7 +70,9 @@ public class ManagerApplicationRunner implements ApplicationRunner {
             for (TableInfo tableInfo : tableInfos2) {
                 if (!StrUtil.isEmpty(tableInfo.getUrl())) continue;
                 List<ColumnInfo> columnInfos =
-                        XlsUtils.readAll(file, tableInfo.getName(), ColumnInfo.class);
+                        XlsUtils.readAll(file, tableInfo.getName(), ColumnInfo.class).stream().filter(
+                                columnInfo -> StrUtil.equals(columnInfo.getIsactive(), "Y")
+                        ).collect(Collectors.toList());
                 tableInfo.setColumns(columnInfos);
                 for (ColumnInfo columnInfo : columnInfos) {
                     if (columnInfo.getView_type() == ColumnType.select) {

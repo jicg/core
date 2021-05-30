@@ -102,6 +102,7 @@ public class ManagerController {
                 groups.add(tableInfo.getGroup());
                 dict.set("group", tableInfo.getGroup())
                         .set("menus", menuList.stream().filter(d -> StrUtil.equals(d.getGroup(), tableInfo.getGroup()))
+                                .sorted(Comparator.comparingLong(TableInfo::getOrderno))
                                 .collect(Collectors.toList()))
                         .set("orderno", tableInfo.getOrderno());
             }

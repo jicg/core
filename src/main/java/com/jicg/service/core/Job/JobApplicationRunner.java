@@ -90,6 +90,7 @@ public class JobApplicationRunner implements ApplicationRunner {
         }
 
         List<JobInfo> finalJobInfos = jobInfos;
+        jobInfos.removeIf(jobInfo -> !jobInfoScans.contains(jobInfo));
         jobInfos.addAll(jobInfoScans.stream().filter(jobInfo -> !finalJobInfos.contains(jobInfo)).collect(Collectors.toList()));
         jobService.addJobs(jobInfos);
         log.info("任务【" + jobInfos.stream().map(JobInfo::getName).collect(Collectors.joining(",")) + "】已经添加 ！！");
