@@ -58,6 +58,7 @@ public class ManagerController {
         return "redirect:/manager/index.html";
     }
 
+
     @GetMapping("/sys/manager/api/menu/list")
     @ResponseBody
     public List<Map<String, Object>> getMenus() {
@@ -159,14 +160,14 @@ public class ManagerController {
     public Dict listObject(@PathVariable("tableName") String tableName,
                            @RequestBody QueryParam param) throws SQLException {
         TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
-        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName);
+        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName+"@list");
 
         if (sql == null) {
-            sql = new TableBuildSql(tf).toSql();
-            ManagerApplicationRunner.tableSqls.get(tableName, sql);
+            sql = new TableBuildSql(tf).toListSql();
+            ManagerApplicationRunner.tableSqls.get(tableName+"@list", sql);
         }
         Entity where = param.where;
-        tf.getColumns().stream().forEach(columnInfo -> {
+        tf.getColumns().stream().filter(c -> !StrUtil.equalsIgnoreCase(c.getIsListCol(), "Y")).forEach(columnInfo -> {
             if (columnInfo.getView_type() == ColumnType.date && where.containsKey(columnInfo.getApiName())) {
                 List<String> dates = (List<String>) where.get(columnInfo.getApiName());
                 Date datebeg = DateUtil.parse(dates.get(0), "yyyyMMdd HH:mm:ss");
@@ -279,10 +280,10 @@ public class ManagerController {
     public Entity getObject(@PathVariable("tableName") String tableName,
                             @RequestParam("id") long id) throws SQLException {
         TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
-        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName);
+        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName+"@get");
         if (sql == null) {
             sql = new TableBuildSql(tf).toSql();
-            ManagerApplicationRunner.tableSqls.get(tableName, sql);
+            ManagerApplicationRunner.tableSqls.get(tableName+"@get", sql);
         }
         Entity where = Entity.create().set("id", id);
         SqlBuilder builder = SqlBuilder.of(sql).where(Query.of(where).getWhere());
@@ -320,6 +321,7 @@ public class ManagerController {
     @GetMapping("/sys/manager/api/table/reload")
     @ResponseBody
     public String reload() {
+        cache.clear();
         ManagerApplicationRunner.reload();
         return "ok";
     }

@@ -29,6 +29,8 @@ public class ColumnInfo {
     private int view_size = 1;
     @XlsAlias("列长度")
     private int list_size = 0;
+    @XlsAlias("是否列显示")
+    private String isListCol = "Y";
     //选项
     @XlsAlias("选项")
     private String selGroup;

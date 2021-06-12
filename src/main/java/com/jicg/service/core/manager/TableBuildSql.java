@@ -125,6 +125,40 @@ public class TableBuildSql {
         return fromSql.insert(0, "select * from (").append(")").toString();
     }
 
+    public String toListSql() {
+        String realName = mainTable.getRealTable();
+        String table = StrUtil.nullToDefault(realName, mainTable.getName());
+        String selSql = mainTable.getColumns().stream().filter(c -> !StrUtil.equalsIgnoreCase(c.getIsListCol(), "N")).map(c -> {
+            String[] linkStrs = commaSplit(c.getName());
+            if (linkStrs.length > 1) {
+                return aliasMap.get(commaRemoveLast(c.getName())).getAlias() + "." + commaLast(c.getName()) + " as " + c.getApiName();
+            } else if (c.getView_type() == ColumnType.object) {
+                LinkInfo linkInfo = aliasMap.get(c.getName());
+
+                return mainTable.getName() + "." + c.getName() + " as " + c.getApiName() + " , " +
+                        linkInfo.getAlias() + "." + linkInfo.getLinkTable().getShowColumn() + " as " + c.getApiName() + "_desc";
+            }
+            return mainTable.getName() + "." + c.getName() + " as " + c.getApiName();
+
+        }).collect(Collectors.joining(","));
+        StringBuffer fromSql = new StringBuffer();
+        fromSql.append("select ").append(selSql);
+        fromSql.append(" from ").append(table).append(" ").append(mainTable.getName());
+        for (String key : linkColumnStr) {
+            String upKey = commaRemoveLast(key);
+            String mainAlias = mainTable.getName();
+            if (StrUtil.isNotEmpty(upKey)) {
+                mainAlias = aliasMap.get(upKey).alias;
+            }
+            LinkInfo upLink = aliasMap.get(key);
+            LinkInfo linkInfo = aliasMap.get(key);
+            fromSql.append(" left join ").append(getRealName(linkInfo.getLinkTable())).append(" ")
+                    .append(linkInfo.getAlias()).append(" on (").append(mainAlias).append(".")
+                    .append(upLink.getMainColumn().getName()).append(" = ").append(linkInfo.getAlias()).append(".id  )");
+        }
+        return fromSql.insert(0, "select * from (").append(")").toString();
+    }
+
     public String getAlias(String columnName) {
         String upKey = commaRemoveLast(columnName);
         String mainAlias = mainTable.getName();
