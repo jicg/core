@@ -260,7 +260,7 @@ public class ManagerController {
                         return;
                     }
                 } else {
-                    String valueStr = where.getStr(key);
+                    String valueStr =param.where.getStr(key);
                     final List<String> strs = StrUtil.split(valueStr, StrUtil.C_SPACE, 2);
                     if (strs.size() < 2) {
                        String ckey = tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName);
