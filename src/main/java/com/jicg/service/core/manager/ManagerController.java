@@ -154,20 +154,22 @@ public class ManagerController {
         return msg;
     }
 
+    private static final String OPERATOR_IN = "IN";
+    private static final List<String> OPERATORS = Arrays.asList("<>", "<=", "<", ">=", ">", "=", "!=", OPERATOR_IN);
 
     @PostMapping("/sys/manager/api/{tableName}/list")
     @ResponseBody
     public Dict listObject(@PathVariable("tableName") String tableName,
                            @RequestBody QueryParam param) throws SQLException {
         TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
-        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName+"@list");
+        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName + "@list");
 
         if (sql == null) {
             sql = new TableBuildSql(tf).toListSql();
-            ManagerApplicationRunner.tableSqls.get(tableName+"@list", sql);
+            ManagerApplicationRunner.tableSqls.get(tableName + "@list", sql);
         }
         Entity where = param.where;
-        tf.getColumns().stream().filter(c -> !StrUtil.equalsIgnoreCase(c.getIsListCol(), "Y")).forEach(columnInfo -> {
+        tf.getColumns().stream().filter(c -> !StrUtil.equalsIgnoreCase(c.getIsListCol(), "N")).forEach(columnInfo -> {
             if (columnInfo.getView_type() == ColumnType.date && where.containsKey(columnInfo.getApiName())) {
                 List<String> dates = (List<String>) where.get(columnInfo.getApiName());
                 Date datebeg = DateUtil.parse(dates.get(0), "yyyyMMdd HH:mm:ss");
@@ -176,8 +178,7 @@ public class ManagerController {
                 condition.setValue(datebeg);
                 condition.setSecondValue(dateend);
                 where.set(columnInfo.getName(), condition);
-            }
-            if (columnInfo.getView_type() == ColumnType.object && where.containsKey(columnInfo.getApiName())) {
+            } else if (columnInfo.getView_type() == ColumnType.object && where.containsKey(columnInfo.getApiName())) {
                 String valueData = "" + where.get(columnInfo.getApiName());
                 if (JSONUtil.isJson(valueData)) {
                     JSON json = JSONUtil.parse(valueData);
@@ -186,8 +187,24 @@ public class ManagerController {
                     condition.setOperator("");
                     condition.setValue(json.getByPath("sql"));
                     where.set(columnInfo.getName(), condition);
-                    return;
                 }
+            } else if (where.containsKey(columnInfo.getApiName())) {
+
+                String valueStr = where.getStr(columnInfo.getApiName());
+                final List<String> strs = StrUtil.split(valueStr, StrUtil.C_SPACE, 2);
+                if (strs.size() < 2) {
+
+                    if (StrUtil.startWith(valueStr, "=")) {
+                        where.set(columnInfo.getApiName(), "= " + StrUtil.subSuf(valueStr, 1));
+                    } else {
+                        where.set(columnInfo.getApiName(), "like %" + valueStr + "%");
+                    }
+                }
+//                // 处理常用符号和IN
+//                final String firstPart = strs.get(0).trim().toUpperCase();
+//                if (OPERATORS.contains(firstPart)) {
+//
+//                }
             }
         });
 
@@ -230,9 +247,7 @@ public class ManagerController {
                             + " AND to_date('" + dates.get(1) + "','yyyyMMdd HH24:mi:ss')");
                     where.set("", condition);
                     descs.add(column.get().getRemark() + ": " + dates.get(0) + "～" + dates.get(1));
-                    return;
-                }
-                if (column.get().getView_type() == ColumnType.object) {
+                } else if (column.get().getView_type() == ColumnType.object) {
                     String valueData = "" + param.where.get(key);
                     if (JSONUtil.isJson(valueData)) {
                         JSON json = JSONUtil.parse(valueData);
@@ -244,12 +259,35 @@ public class ManagerController {
                         descs.add(column.get().getRemark() + ": " + json.getByPath("desc"));
                         return;
                     }
+                } else {
+                    String valueStr = where.getStr(key);
+                    final List<String> strs = StrUtil.split(valueStr, StrUtil.C_SPACE, 2);
+                    if (strs.size() < 2) {
+                       String ckey = tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName);
+                        if (StrUtil.startWith(valueStr, "=")) {
+                            where.set(ckey, "= " + StrUtil.subSuf(valueStr, 1));
+                        } else {
+                            where.set(ckey, "like %" + valueStr + "%");
+                        }
+                        descs.add(column.get().getRemark() + ": " + param.where.get(key));
+                        return;
+                    }
+
                 }
                 descs.add(column.get().getRemark() + ": " + param.where.get(key));
             } else {
                 descs.add("特殊条件[" + key + "]:" + param.where.get(key));
                 where.set(key, param.where.get(key));
 //                descs.add("特殊条件[" + key + "]:" + param.where.get(key));
+//                String valueStr = where.getStr(key);
+//                final List<String> strs = StrUtil.split(valueStr, StrUtil.C_SPACE, 2);
+//                if (strs.size() < 2) {
+//                    if (StrUtil.startWith(valueStr, "=")) {
+//                        where.set(key, "= " + StrUtil.subSuf(valueStr,1));
+//                    } else {
+//                        where.set(key, "like %" + valueStr + "%");
+//                    }
+//                }
             }
             where.set(tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName), param.where.get(key));
 
@@ -269,7 +307,7 @@ public class ManagerController {
                 strSql = strSql.replaceFirst("\\?", "'" + val + "'");
             }
         }
-        Dict dict = Dict.create().set("sql", strSql).set("desc", descs.stream().map(s -> "( " + s + " )").collect(Collectors.joining(" 并且 ")));
+        Dict dict = Dict.create().set("sql", strSql).set("desc", descs.stream().map(s -> tf.getRemark() + "( " + s + " )").collect(Collectors.joining(" 并且 ")));
         return StrUtil.equalsIgnoreCase(type, "xml") ?
                 XmlUtil.mapToXml(dict, "filter").getChildNodes() : dict;
     }
@@ -280,10 +318,10 @@ public class ManagerController {
     public Entity getObject(@PathVariable("tableName") String tableName,
                             @RequestParam("id") long id) throws SQLException {
         TableInfo tf = ManagerApplicationRunner.tableMap.get(tableName);
-        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName+"@get");
+        String sql = (String) ManagerApplicationRunner.tableSqls.get(tableName + "@get");
         if (sql == null) {
             sql = new TableBuildSql(tf).toSql();
-            ManagerApplicationRunner.tableSqls.get(tableName+"@get", sql);
+            ManagerApplicationRunner.tableSqls.get(tableName + "@get", sql);
         }
         Entity where = Entity.create().set("id", id);
         SqlBuilder builder = SqlBuilder.of(sql).where(Query.of(where).getWhere());
