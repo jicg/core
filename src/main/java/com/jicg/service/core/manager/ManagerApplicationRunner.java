@@ -75,6 +75,7 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                         ).collect(Collectors.toList());
                 tableInfo.setColumns(columnInfos);
                 for (ColumnInfo columnInfo : columnInfos) {
+                    columnInfo.setName(columnInfo.getName().toLowerCase());
                     if (columnInfo.getView_type() == ColumnType.select) {
                         columnInfo.setSelectOps(selOpts.stream()
                                 .filter(selectOps -> StrUtil.equalsIgnoreCase(
