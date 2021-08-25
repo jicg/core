@@ -3,7 +3,10 @@ package com.jicg.service.core.config;
 import cn.hutool.core.collection.ListUtil;
 import com.jicg.service.core.Utils;
 import lombok.Data;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 
@@ -13,9 +16,12 @@ import java.util.List;
 @ConfigurationProperties(prefix = "app")
 @Data
 public class AppProperties {
+
+
     private JobConfig job = new JobConfig();
 
     private String url = "/";
+    
 
     @Data
     public static class JobConfig {

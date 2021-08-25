@@ -1,7 +1,5 @@
 package com.jicg.service.core.Job;
 
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.json.JSONUtil;
 import com.jicg.service.core.Job.bean.BaseJobAction;
@@ -10,6 +8,7 @@ import com.jicg.service.core.Utils;
 import com.jicg.service.core.annos.JobDisable;
 import com.jicg.service.core.annos.JobJava;
 import com.jicg.service.core.config.AppConfig;
+import com.jicg.service.core.config.AppProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 @Component
 @Order(200)
 public class JobApplicationRunner implements ApplicationRunner {
-    private final AppConfig appConfig;
+    private final AppProperties.JobConfig jobConfig;
     private final JobService jobService;
     public static final String NAME_KEY = "NAME_KEY";
     public static final String DATA_KEY = "DATA_KEY";
@@ -39,8 +38,8 @@ public class JobApplicationRunner implements ApplicationRunner {
 
     public static ApplicationContext applicationContext;
 
-    public JobApplicationRunner(AppConfig appConfig, JobService jobService, ApplicationContext applicationContext) {
-        this.appConfig = appConfig;
+    public JobApplicationRunner(AppProperties.JobConfig jobConfig, JobService jobService, ApplicationContext applicationContext) {
+        this.jobConfig = jobConfig;
         this.jobService = jobService;
         JobApplicationRunner.applicationContext = applicationContext;
     }
@@ -79,14 +78,14 @@ public class JobApplicationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         List<JobInfo> jobInfos = new ArrayList<>();
         try {
-            jobInfos = Utils.readJsonFile2List(appConfig.getJob().getSavePath(), JobInfo.class);
+            jobInfos = Utils.readJsonFile2List(jobConfig.getSavePath(), JobInfo.class);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getLocalizedMessage(), e);
         }
         List<JobInfo> jobInfoScans = new ArrayList<>();
-        if (appConfig.getJob().getPackages().size() > 0) {
-            appConfig.getJob().getPackages().forEach(pag -> jobInfoScans.addAll(getScanBean(pag)));
+        if (jobConfig.getPackages().size() > 0) {
+            jobConfig.getPackages().forEach(pag -> jobInfoScans.addAll(getScanBean(pag)));
         }
 
         List<JobInfo> finalJobInfos = jobInfos;

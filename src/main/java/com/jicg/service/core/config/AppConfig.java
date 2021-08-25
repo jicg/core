@@ -14,6 +14,7 @@ import com.jicg.service.core.manager.ManagerController;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -70,7 +71,8 @@ public class AppConfig {
         module.addSerializer(Clob.class, new OracleClobSerializer());
         return module;
     }
-
+    @Bean
+    @ConditionalOnMissingBean
     public AppProperties.JobConfig getJob() {
         return appProperties.getJob();
     }
