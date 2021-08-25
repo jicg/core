@@ -1,6 +1,7 @@
 package com.jicg.service.core.config;
 
 import cn.hutool.core.collection.ListUtil;
+import com.jicg.service.core.Utils;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -18,7 +19,7 @@ public class AppProperties {
 
     @Data
     public static class JobConfig {
-        private String savePath = "./job.json";
+        private String savePath = Utils.ApplicationHomePath() + "/data/job.json";
         private List<String> packages = ListUtil.of();
     }
 }
