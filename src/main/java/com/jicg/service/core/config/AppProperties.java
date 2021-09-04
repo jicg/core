@@ -16,12 +16,8 @@ import java.util.List;
 @ConfigurationProperties(prefix = "app")
 @Data
 public class AppProperties {
-
-
     private JobConfig job = new JobConfig();
-
     private String url = "/";
-    
 
     @Data
     public static class JobConfig {

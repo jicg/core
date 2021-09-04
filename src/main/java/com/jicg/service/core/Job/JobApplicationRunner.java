@@ -1,6 +1,7 @@
 package com.jicg.service.core.Job;
 
 import cn.hutool.core.util.ClassUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.jicg.service.core.Job.bean.BaseJobAction;
 import com.jicg.service.core.Job.bean.JobInfo;
@@ -39,6 +40,7 @@ public class JobApplicationRunner implements ApplicationRunner {
     public static ApplicationContext applicationContext;
 
     public JobApplicationRunner(AppProperties.JobConfig jobConfig, JobService jobService, ApplicationContext applicationContext) {
+        log.info(JSONUtil.toJsonStr(jobConfig));
         this.jobConfig = jobConfig;
         this.jobService = jobService;
         JobApplicationRunner.applicationContext = applicationContext;

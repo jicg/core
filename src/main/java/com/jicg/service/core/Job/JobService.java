@@ -1,17 +1,16 @@
 package com.jicg.service.core.Job;
 
 
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jicg.service.core.Job.bean.JobInfo;
 import com.jicg.service.core.Utils;
 import com.jicg.service.core.config.AppConfig;
+import com.jicg.service.core.config.AppProperties;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.quartz.spi.JobStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +23,17 @@ import static com.jicg.service.core.Job.JobApplicationRunner.*;
 @Service
 @Data
 public class JobService {
-    private final AppConfig appConfig;
+    //    private final AppConfig appConfig;
+    private final AppProperties.JobConfig jobConfig;
     private final Scheduler scheduler;
 //    private List<JobInfo> stoped = new ArrayList<>();
 
     @Autowired
-    public JobService(Scheduler scheduler, AppConfig appConfig) {
+    public JobService(Scheduler scheduler,// AppConfig appConfig,
+                      AppProperties.JobConfig jobConfig) {
         this.scheduler = scheduler;
-        this.appConfig = appConfig;
+//        this.appConfig = appConfig;
+        this.jobConfig = jobConfig;
     }
 
     public void addJob(JobInfo jobInfo) throws Exception {
@@ -77,7 +79,7 @@ public class JobService {
 
 
     private void saveToFile() throws SchedulerException {
-        Utils.writeJsonFile2Bean(appConfig.getJob().getSavePath(), getAll());
+        Utils.writeJsonFile2Bean(jobConfig.getSavePath(), getAll());
     }
 
 
