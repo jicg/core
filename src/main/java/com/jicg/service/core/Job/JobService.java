@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.jicg.service.core.Job.JobApplicationRunner.*;
@@ -60,7 +61,8 @@ public class JobService {
         jobDetail.getJobDataMap().put(DATA_KEY, jobInfo.getJavaData());
         jobDetail.getJobDataMap().put(ORDER_KEY, jobInfo.getOrder());
         // Cron表达式调度构建器(即任务执行的时间)
-        CronScheduleBuilder cron = CronScheduleBuilder.cronSchedule(jobInfo.getCron());
+        CronScheduleBuilder cron = CronScheduleBuilder.cronSchedule(jobInfo.getCron())
+                .withMisfireHandlingInstructionDoNothing();
         //根据Cron表达式构建一个Trigger
         CronTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(jobInfo.getJobName(), jobInfo.getGroupName())
@@ -97,8 +99,15 @@ public class JobService {
         saveToFile();
     }
 
+    private Map<String, Long> map = new ConcurrentHashMap<String, Long>();
+
     public void triggerJob(String jobName, String jobGroup) throws Exception {
 //        checkIsNotExistsJobAndAdd(jobName, jobGroup);
+        List<? extends Trigger> triggers = scheduler.getTriggersOfJob(JobKey.jobKey(jobName, jobGroup));
+        for (Trigger trigger : triggers) {
+            Trigger.TriggerState state = scheduler.getTriggerState(trigger.getKey());
+            if (state == Trigger.TriggerState.BLOCKED) return;
+        }
         scheduler.triggerJob(JobKey.jobKey(jobName, jobGroup));
     }
 
