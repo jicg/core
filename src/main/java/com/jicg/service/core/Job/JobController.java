@@ -1,24 +1,26 @@
 package com.jicg.service.core.Job;
 
-import cn.hutool.core.collection.CollectionUtil;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.lang.Dict;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.jicg.service.core.Job.bean.BaseJobAction;
 import com.jicg.service.core.Job.bean.JobInfo;
-import org.quartz.SchedulerException;
+import com.jicg.service.core.config.auth.CoreStpUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * @author jicg on 2021/3/21
  */
+@Slf4j
 @Controller
+@SaCheckLogin(type = CoreStpUtil.type)
 public class JobController {
     private final JobService jobService;
 
@@ -39,12 +41,23 @@ public class JobController {
 
     @ResponseBody
     @GetMapping(path = "/sys/api/job/list2")
-    public List<Dict> list2() throws Exception {
+    public List<Dict> list2(@RequestParam(name = "mod", defaultValue = "") String mod) throws Exception {
         List<Dict> dicts = new ArrayList<>();
         List<JobInfo> allJobs = jobService.getAll();
-        List<String> group = jobService.getAll().stream().map(JobInfo::getGroupName).distinct().collect(Collectors.toList());
+        if (!StrUtil.isEmpty(mod)) {
+            allJobs = allJobs.stream().filter(jobInfo -> {
+                if (JSONUtil.isJson(jobInfo.getJavaData())) {
+                    BaseJobAction jobAction = JSONUtil.toBean(jobInfo.getJavaData(), BaseJobAction.class);
+                    return StrUtil.containsIgnoreCase(jobAction.getJavaClass(), mod);
+                }
+                return false;
+            }).collect(Collectors.toList());
+        }
+        List<JobInfo> finalAllJobs = allJobs;
+        List<String> group = finalAllJobs.stream().map(JobInfo::getGroupName).distinct().collect(Collectors.toList());
+
         group.forEach(key -> {
-            List<JobInfo> jobs = allJobs.stream().filter(jobInfo ->
+            List<JobInfo> jobs = finalAllJobs.stream().filter(jobInfo ->
                     StrUtil.equals(key, jobInfo.getGroupName())).collect(Collectors.toList());
             dicts.add(Dict.create().set("key", key).set("jobs", jobs));
         });

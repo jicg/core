@@ -1,5 +1,6 @@
 package com.jicg.service.core.manager;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Dict;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @Component
 public class ManagerApplicationRunner implements ApplicationRunner {
     final static Map<String, TableInfo> tableMap = new HashMap<>();
+    final static List<String> mods = new ArrayList<>();
     public static Dict tableSqls = Dict.create();
 
     public void registerXls() {
@@ -52,6 +54,7 @@ public class ManagerApplicationRunner implements ApplicationRunner {
 
     public static void reload() {
 //        log.info("**************** start reload xlsx *********************");
+        mods.clear();
         tableMap.clear();
         List<TableInfo> tableInfos = new ArrayList<>();
 
@@ -118,6 +121,14 @@ public class ManagerApplicationRunner implements ApplicationRunner {
                 upTable.getItemTables().add(c);
             }
         });
+
+
+        for (TableInfo tableInfo : tableInfos) {
+            if (!StrUtil.equalsIgnoreCase(tableInfo.getIsmenu(), "Y")) continue;
+            String modInfo = tableInfo.getMod();
+            if (!mods.contains(modInfo))
+                mods.add(modInfo);
+        }
     }
 
 }

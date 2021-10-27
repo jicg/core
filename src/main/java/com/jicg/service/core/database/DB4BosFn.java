@@ -44,7 +44,6 @@ public class DB4BosFn {
 
     public static PreparedStatement prepareStatementForBatch(Connection conn, String sql, List<String> fields, Entity... entities) throws SQLException {
         Assert.notBlank(sql, "Sql String must be not blank!");
-
         sql = sql.trim();
         SqlLog.INSTANCE.logForBatch(sql);
         PreparedStatement ps = conn.prepareStatement(sql, new String[]{"id"});

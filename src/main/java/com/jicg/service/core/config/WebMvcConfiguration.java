@@ -1,12 +1,15 @@
 package com.jicg.service.core.config;
 
+import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
 import cn.hutool.core.util.ArrayUtil;
 import com.jicg.service.core.manager.ManagerController;
+import com.jicg.service.core.manager.StaticController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -44,7 +47,7 @@ public class WebMvcConfiguration implements WebMvcRegistrations {
         @Override
         protected RequestMappingInfo getMappingForMethod(Method method, Class handlerType) {
             RequestMappingInfo info = super.getMappingForMethod(method, handlerType);
-            if (handlerType == ManagerController.class) {
+            if (handlerType == StaticController.class) {
                 if (method.getName().equals("index")) {
                     Set<String> paths = info.getDirectPaths();
                     paths.add(appProperties.getUrl());

@@ -9,3 +9,12 @@ app:
   job:
     save_path: /Users/jicg/Desktop/tools/job.json
   url: /
+  ip-filter:
+    enable: true
+    exclude-path-patterns:
+      - /api/wm/*/notice
+    cidr: 192.168.0.0/16
+  auth:
+    enable: true
+    type: simple
+

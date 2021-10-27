@@ -1,14 +1,11 @@
 package com.jicg.service.core.manager;
 
-import cn.hutool.cache.file.LFUFileCache;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.date.DateBetween;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
@@ -16,48 +13,36 @@ import cn.hutool.db.*;
 import cn.hutool.db.sql.*;
 import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
-import cn.hutool.log.level.Level;
-import com.jicg.service.core.Utils;
+import com.jicg.service.core.config.auth.CoreStpUtil;
 import com.jicg.service.core.database.DB4BosFn;
-import com.jicg.service.core.database.DBCore;
-import com.jicg.service.core.manager.bean.ButtonInfo;
-import com.jicg.service.core.manager.bean.ColumnInfo;
-import com.jicg.service.core.manager.bean.ColumnType;
-import com.jicg.service.core.manager.bean.TableInfo;
+import com.jicg.service.core.manager.bean.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.SchedulerException;
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
-import sun.nio.ch.IOUtil;
 
-import java.awt.*;
-import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
-import java.util.function.IntFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author jicg on 2021/3/31
  */
 @Controller
 @Slf4j
+@SaCheckLogin(type = CoreStpUtil.type)
 public class ManagerController {
 
-    LFUFileCache cache = new LFUFileCache(1000, 1024 * 10, 1);
 
-    @GetMapping(path = "/manager/")
-    public String index() {
-        return "redirect:/manager/index.html";
+
+    @GetMapping("/sys/manager/api/mod/list")
+    @ResponseBody
+    public List<String> getMods() {
+        return ManagerApplicationRunner.mods;
     }
-
 
     @GetMapping("/sys/manager/api/menu/list")
     @ResponseBody
@@ -67,7 +52,7 @@ public class ManagerController {
         )).map(key -> {
             TableInfo tableInfo = ManagerApplicationRunner.tableMap.get(key);
             return MapUtil.builder(
-                    new HashMap<String, Object>())
+                            new HashMap<String, Object>())
                     .put("name", tableInfo.getName())
                     .put("remark", tableInfo.getRemark())
                     .put("group", tableInfo.getGroup())
@@ -80,10 +65,10 @@ public class ManagerController {
 
     @GetMapping("/sys/manager/api/menu/list2")
     @ResponseBody
-    public List<Map<String, Object>> getMenus2() {
-        List<String> strs = ManagerApplicationRunner.tableMap.keySet().stream().filter(key -> StrUtil.equalsIgnoreCase(
-                ManagerApplicationRunner.tableMap.get(key).getIsmenu(), "Y"
-        )).collect(Collectors.toList());
+    public List<Map<String, Object>> getMenus2(@RequestParam(name = "mod", defaultValue = "") String mod) {
+        List<String> strs = ManagerApplicationRunner.tableMap.keySet().stream().filter(key ->
+                StrUtil.equalsIgnoreCase(ManagerApplicationRunner.tableMap.get(key).getIsmenu(), "Y") &&
+                        StrUtil.equalsIgnoreCase(ManagerApplicationRunner.tableMap.get(key).getMod(), mod)).collect(Collectors.toList());
         List<Dict> dicts = new ArrayList<>();
         List<String> groups = new ArrayList<>();
         List<TableInfo> menuList = strs.stream().map(ManagerApplicationRunner.tableMap::get).collect(Collectors.toList());
@@ -260,10 +245,10 @@ public class ManagerController {
                         return;
                     }
                 } else {
-                    String valueStr =param.where.getStr(key);
+                    String valueStr = param.where.getStr(key);
                     final List<String> strs = StrUtil.split(valueStr, StrUtil.C_SPACE, 2);
                     if (strs.size() < 2) {
-                       String ckey = tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName);
+                        String ckey = tableBuildSql.getAlias(columnName) + "." + TableBuildSql.commaLast(columnName);
                         if (StrUtil.startWith(valueStr, "=")) {
                             where.set(ckey, "= " + StrUtil.subSuf(valueStr, 1));
                         } else {
@@ -344,22 +329,13 @@ public class ManagerController {
         return ManagerApplicationRunner.tableMap.keySet().stream().map(ManagerApplicationRunner.tableMap::get).collect(Collectors.toList());
     }
 
-    @GetMapping("/sys/manager/extends.js")
-    @ResponseBody
-    public String getJS() {
-        try {
-            byte[] bytes = cache.getFileBytes(FileUtil.file("system/extends.js"));
-            return StrUtil.str(bytes, "UTF8");
-        } catch (Exception e) {
-            return "";
-        }
-    }
+
 
 
     @GetMapping("/sys/manager/api/table/reload")
     @ResponseBody
     public String reload() {
-        cache.clear();
+        StaticController.cache.clear();
         ManagerApplicationRunner.reload();
         return "ok";
     }

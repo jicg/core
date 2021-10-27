@@ -1,1 +1,0 @@
-import{e as a,r as e,c as s,g as r,A as t,B as c,o as d,l as o}from"./vendor.70422edf.js";var f=a({props:{},setup:(a,e)=>({}),name:"Welcome"});t("data-v-571f5c1a");const n=o(" create by jicg");c(),f.render=function(a,t,c,o,f,l){const p=e("el-header");return d(),s(p,{class:"asdfasdfas"},{default:r((()=>[n])),_:1})},f.__scopeId="data-v-571f5c1a";export default f;

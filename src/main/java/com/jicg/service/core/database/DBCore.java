@@ -1,4 +1,4 @@
-package  com.jicg.service.core.database;
+package com.jicg.service.core.database;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Dict;
@@ -7,7 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.DbUtil;
 import cn.hutool.db.Entity;
-import  com.jicg.service.core.Utils;
+import com.jicg.service.core.Utils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
  */
 
 public class DBCore {
-
 
 
     public static int batchSize = 1000;
@@ -60,9 +59,12 @@ public class DBCore {
         List<Entity> ids = db.query(sql);
         AtomicInteger index = new AtomicInteger();
         List<Entity> entities = datas.stream().map((s) -> {
-            BeanUtil.setFieldValue(s, "id", ids.get(index.getAndIncrement()).getInt("id"));
-            return Entity.parse(s)
-                    .setTableName(table);
+            BeanUtil.setFieldValue(
+                    s,
+                    "id",
+                    ids.get(index.getAndIncrement()).getInt("id")
+            );
+            return Entity.parse(s).setTableName(table);
         }).collect(Collectors.toList());
         db.insert(entities);
     }

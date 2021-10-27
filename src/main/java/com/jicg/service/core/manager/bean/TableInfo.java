@@ -26,6 +26,9 @@ public class TableInfo {
     @XlsAlias("描述")
     private String remark;
     // 描述
+    @XlsAlias("模块")
+    private String mod = "";
+    // 描述
     @XlsAlias("类别")
     private String group;
     // 序号
