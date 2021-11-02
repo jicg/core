@@ -19,6 +19,7 @@ import java.util.List;
 public class AppProperties {
     private JobConfig job = new JobConfig();
     private String url = "/";
+    private String title = "管理";
     private AuthConfig auth = new AuthConfig();
     private IpFilter ipFilter = new IpFilter();
 

@@ -25,12 +25,16 @@ public class SaTokenConfigure implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        if (authConfig.isEnable())
+        if (authConfig.isEnable()) {
             // 注册注解拦截器
             registry.addInterceptor(new SaAnnotationInterceptor()).addPathPatterns("/**").excludePathPatterns("");
-        if (ipFilter.isEnable())
+        }
+        if (ipFilter.isEnable()) {
+            if (!ipFilter.getExcludePathPatterns().contains("/error"))
+                ipFilter.getExcludePathPatterns().add("/error");
             registry.addInterceptor(new IpInterceptor(ipFilter)).addPathPatterns("/**")
                     .excludePathPatterns(ipFilter.getExcludePathPatterns());
+        }
     }
 
 //    /**

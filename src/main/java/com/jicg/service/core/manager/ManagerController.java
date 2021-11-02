@@ -13,11 +13,13 @@ import cn.hutool.db.*;
 import cn.hutool.db.sql.*;
 import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
+import com.jicg.service.core.config.AppProperties;
 import com.jicg.service.core.config.auth.CoreStpUtil;
 import com.jicg.service.core.database.DB4BosFn;
 import com.jicg.service.core.manager.bean.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +38,17 @@ import java.util.stream.Collectors;
 @SaCheckLogin(type = CoreStpUtil.type)
 public class ManagerController {
 
+    final AppProperties appProperties;
 
+    public ManagerController(AppProperties appProperties) {
+        this.appProperties = appProperties;
+    }
+
+    @GetMapping("/sys/manager/api/title")
+    @ResponseBody
+    public String getTitle() {
+        return appProperties.getTitle();
+    }
 
     @GetMapping("/sys/manager/api/mod/list")
     @ResponseBody
@@ -328,8 +340,6 @@ public class ManagerController {
     public List<TableInfo> getTables() {
         return ManagerApplicationRunner.tableMap.keySet().stream().map(ManagerApplicationRunner.tableMap::get).collect(Collectors.toList());
     }
-
-
 
 
     @GetMapping("/sys/manager/api/table/reload")

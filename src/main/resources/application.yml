@@ -6,14 +6,17 @@ server:
 
 
 app:
+  title: 测试中心
   job:
     save_path: /Users/jicg/Desktop/tools/job.json
   url: /
   ip-filter:
-    enable: true
+    enable: false
     exclude-path-patterns:
       - /api/wm/*/notice
-    cidr: 192.168.0.0/16
+      - /text/*
+    cidr:
+      - 192.168.0.0/16
   auth:
     enable: true
     type: simple
